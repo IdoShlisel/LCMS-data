@@ -86,7 +86,30 @@ with st.sidebar:
 
 ######################3 --- Main Screen ###################################################3
 
-st.title("Analyzing LCMS compound data")
+st.title("🧪 LCMS Molecule Analyzer")
+
+## folded instructions:
+
+
+with st.expander("📖 How to use this app (Documentation)"):
+    st.markdown("""
+    ## 🌟 Overview
+    This application helps you find information about molecules from LCMS results by:
+    1. **Comparing results** to the [ChEBI database](https://www.ebi.ac.uk/chebi/).
+    2. **Using Groq LLM** to answer specific questions about each molecule.
+
+    ---
+    ## 🛠 Instructions
+    1. **Enter your Groq API Key** in the sidebar.
+    2. **Paste molecule names** from your LCMS file.
+    3. **Configure AI Analysis**:
+        * Ask open-ended or Yes/No questions.
+        * Select as many questions as you need.
+        * *Note: More questions = longer processing time!* ⏳
+    
+    4. **Download results** as a CSV file once finished. 📥
+    """)
+
 
 if run_button:
 
