@@ -193,104 +193,96 @@ if run_button:
 
 
 
-# 4. Display the results
-st.subheader("Groq Questions and Answers")
-st.dataframe(st.session_state.groq_answers_df, use_container_width=True, hide_index=True, column_config={"Compound": st.column_config.TextColumn("Compound Name")})
+    # 4. Display the results
+    st.subheader("Groq Questions and Answers")
+    st.dataframe(st.session_state.groq_answers_df, use_container_width=True, hide_index=True, column_config={"Compound": st.column_config.TextColumn("Compound Name")})
 
-st.subheader("ChEBI Relations")
-#show chart of chebi_df with filter on relation type
+    st.subheader("ChEBI Relations")
+    #show chart of chebi_df with filter on relation type
 
-# 1. Multi-select for Relation Type (Default is all options)
-all_relation_types = st.session_state.chebi_relations['ChEBI Relation Type'].unique().tolist()
+    # 1. Multi-select for Relation Type (Default is all options)
+    all_relation_types = st.session_state.chebi_relations['ChEBI Relation Type'].unique().tolist()
 
-relation_type_filter = st.multiselect(
-    "Filter by Relation Type", 
-    options=all_relation_types,
-    default=all_relation_types 
-)
-
-# Filter the dataframe based on the multi-select choices
-if relation_type_filter:
-    filtered_chebi_df = st.session_state.chebi_relations[
-        st.session_state.chebi_relations['ChEBI Relation Type'].isin(relation_type_filter)
-    ]
-else:
-    filtered_chebi_df = st.session_state.chebi_relations.iloc[0:0]
-
-# 2. Pre-process the data
-if not filtered_chebi_df.empty:
-    df_grouped = filtered_chebi_df.groupby(['ChEBI Relation Type', 'ChEBI Relattion'])['LCMS Compound Name'].agg(
-        unique_count='nunique',
-        molecule_list=lambda x: '<br>'.join(x.unique())
-    ).reset_index()
-    
-    # CRITICAL: Sort by outer then inner to ensure the nested X-axis brackets group cleanly together
-    df_grouped = df_grouped.sort_values(by=['ChEBI Relation Type', 'ChEBI Relattion'])
-    
-    # Create colors so each 'Relation Type' block gets its own color like JMP
-    unique_outer = df_grouped['ChEBI Relation Type'].unique()
-    colors = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52']
-    color_map = {cat: colors[i % len(colors)] for i, cat in enumerate(unique_outer)}
-    marker_colors = [color_map[cat] for cat in df_grouped['ChEBI Relation Type']]
-
-    # To build a JMP-style nested axis, we must pass a 2-level array to X
-    x_multi = [
-        df_grouped['ChEBI Relation Type'].tolist(), # Outer Category
-        df_grouped['ChEBI Relattion'].tolist()      # Inner Category
-    ]
-    
-    # 3. Create the Chart using Graph Objects (go) instead of Express (px)
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=x_multi,
-        y=df_grouped['unique_count'].tolist(),
-        customdata=df_grouped['molecule_list'].tolist(),
-        marker_color=marker_colors,
-        # Format the hover text: %{x[0]} is outer, %{x[1]} is inner category
-        hovertemplate="<b>%{x[0]}</b> > %{x[1]}<br><b>Count:</b> %{y}<br><br><b>Molecules:</b><br>%{customdata}<extra></extra>"
-    ))
-    
-    # 4. Force the nested layout without a legend
-    fig.update_layout(
-        showlegend=False,          # Removes the legend completely
-        bargap=0.05,               # Tightens the bars to create a histogram appearance
-        xaxis=dict(
-            type='multicategory',  # Forces the 2-level nested axis!
-            title=""               # Removes title so the bracket labels stand on their own
-        ),
-        yaxis_title="Count of Distinct Compounds",
-        title="Count of Distinct Compounds by Relation Hierarchy"
+    relation_type_filter = st.multiselect(
+        "Filter by Relation Type", 
+        options=all_relation_types,
+        default=all_relation_types 
     )
-    
-    st.plotly_chart(fig, use_container_width=True, theme="streamlit", config={"displayModeBar": False})
-else:
-    st.info("Please select at least one Relation Type to display the chart.")
-#show ChEBI df
-st.dataframe(filtered_chebi_df, use_container_width=True, hide_index=True)
 
-# 5. Provide download buttons for the results
-st.subheader("Download Results")
-# merge both dfs by LCMS Compound Name
-if not st.session_state.groq_answers_df.empty and not st.session_state.chebi_relations.empty:
-    merged_df = pd.merge(st.session_state.groq_answers_df, st.session_state.chebi_relations, left_on="Compound", right_on="LCMS Compound Name", how="outer")
-    # Drop the redundant 'LCMS Compound Name' column after merge
-    merged_df = merged_df.drop(columns=['LCMS Compound Name'], errors='ignore')
-    st.download_button(
-        label="Download Merged Data as CSV",
-        data=merged_df.to_csv(index=False).encode('utf-8'),
-        file_name='merged_compound_data.csv',
-        mime='text/csv'
-    )
-else:
-    st.info("No data available to download.")    
+    # Filter the dataframe based on the multi-select choices
+    if relation_type_filter:
+        filtered_chebi_df = st.session_state.chebi_relations[
+            st.session_state.chebi_relations['ChEBI Relation Type'].isin(relation_type_filter)
+        ]
+    else:
+        filtered_chebi_df = st.session_state.chebi_relations.iloc[0:0]
 
+    # 2. Pre-process the data
+    if not filtered_chebi_df.empty:
+        df_grouped = filtered_chebi_df.groupby(['ChEBI Relation Type', 'ChEBI Relattion'])['LCMS Compound Name'].agg(
+            unique_count='nunique',
+            molecule_list=lambda x: '<br>'.join(x.unique())
+        ).reset_index()
+        
+        # CRITICAL: Sort by outer then inner to ensure the nested X-axis brackets group cleanly together
+        df_grouped = df_grouped.sort_values(by=['ChEBI Relation Type', 'ChEBI Relattion'])
+        
+        # Create colors so each 'Relation Type' block gets its own color like JMP
+        unique_outer = df_grouped['ChEBI Relation Type'].unique()
+        colors = ['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52']
+        color_map = {cat: colors[i % len(colors)] for i, cat in enumerate(unique_outer)}
+        marker_colors = [color_map[cat] for cat in df_grouped['ChEBI Relation Type']]
 
+        # To build a JMP-style nested axis, we must pass a 2-level array to X
+        x_multi = [
+            df_grouped['ChEBI Relation Type'].tolist(), # Outer Category
+            df_grouped['ChEBI Relattion'].tolist()      # Inner Category
+        ]
+        
+        # 3. Create the Chart using Graph Objects (go) instead of Express (px)
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=x_multi,
+            y=df_grouped['unique_count'].tolist(),
+            customdata=df_grouped['molecule_list'].tolist(),
+            marker_color=marker_colors,
+            # Format the hover text: %{x[0]} is outer, %{x[1]} is inner category
+            hovertemplate="<b>%{x[0]}</b> > %{x[1]}<br><b>Count:</b> %{y}<br><br><b>Molecules:</b><br>%{customdata}<extra></extra>"
+        ))
+        
+        # 4. Force the nested layout without a legend
+        fig.update_layout(
+            showlegend=False,          # Removes the legend completely
+            bargap=0.05,               # Tightens the bars to create a histogram appearance
+            xaxis=dict(
+                type='multicategory',  # Forces the 2-level nested axis!
+                title=""               # Removes title so the bracket labels stand on their own
+            ),
+            yaxis_title="Count of Distinct Compounds",
+            title="Count of Distinct Compounds by Relation Hierarchy"
+        )
+        
+        st.plotly_chart(fig, use_container_width=True, theme="streamlit", config={"displayModeBar": False})
+    else:
+        st.info("Please select at least one Relation Type to display the chart.")
+    #show ChEBI df
+    st.dataframe(filtered_chebi_df, use_container_width=True, hide_index=True)
 
-
-
-
-
-
+    # 5. Provide download buttons for the results
+    st.subheader("Download Results")
+    # merge both dfs by LCMS Compound Name
+    if not st.session_state.groq_answers_df.empty and not st.session_state.chebi_relations.empty:
+        merged_df = pd.merge(st.session_state.groq_answers_df, st.session_state.chebi_relations, left_on="Compound", right_on="LCMS Compound Name", how="outer")
+        # Drop the redundant 'LCMS Compound Name' column after merge
+        merged_df = merged_df.drop(columns=['LCMS Compound Name'], errors='ignore')
+        st.download_button(
+            label="Download Merged Data as CSV",
+            data=merged_df.to_csv(index=False).encode('utf-8'),
+            file_name='merged_compound_data.csv',
+            mime='text/csv'
+        )
+    else:
+        st.info("No data available to download.")    
 
 
 
