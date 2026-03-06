@@ -193,20 +193,12 @@ if run_button:
 
 
 
-else:
-    st.info("Awaiting input. Configure parameters in the sidebar and click Run.")
-
-
-
 # 4. Display the results
 st.subheader("Groq Questions and Answers")
 st.dataframe(st.session_state.groq_answers_df, use_container_width=True, hide_index=True, column_config={"Compound": st.column_config.TextColumn("Compound Name")})
 
 st.subheader("ChEBI Relations")
 #show chart of chebi_df with filter on relation type
-import streamlit as st
-
-import pandas as pd
 
 # 1. Multi-select for Relation Type (Default is all options)
 all_relation_types = st.session_state.chebi_relations['ChEBI Relation Type'].unique().tolist()
@@ -270,7 +262,7 @@ if not filtered_chebi_df.empty:
         title="Count of Distinct Compounds by Relation Hierarchy"
     )
     
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, theme="streamlit", config={"displayModeBar": False})
 else:
     st.info("Please select at least one Relation Type to display the chart.")
 #show ChEBI df
@@ -291,3 +283,18 @@ if not st.session_state.groq_answers_df.empty and not st.session_state.chebi_rel
     )
 else:
     st.info("No data available to download.")    
+
+
+
+
+
+
+
+
+
+
+
+else:
+    st.info("Awaiting input. Configure parameters in the sidebar and click Run.")
+
+
