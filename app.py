@@ -216,6 +216,15 @@ if run_button:
 
 
 
+
+
+else:
+    st.info("Awaiting input. Configure parameters in the sidebar and click Run.")
+
+if len(st.session_state.chebi_relations) == 0:
+    pass
+else:
+
     # 4. Display the results
     st.subheader("Groq Questions and Answers")
     st.dataframe(st.session_state.groq_answers_df, use_container_width=True, hide_index=True, column_config={"Compound": st.column_config.TextColumn("Compound Name")})
@@ -309,7 +318,5 @@ if run_button:
 
 
 
-else:
-    st.info("Awaiting input. Configure parameters in the sidebar and click Run.")
 
 
