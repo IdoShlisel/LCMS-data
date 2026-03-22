@@ -3,27 +3,45 @@ import pandas as pd
 from groq import Groq
 import json
 
+import pandas as pd
+import requests
+
 def get_chebi_outgoing_relations(chebi_id, timeout=10, relation_type="has role"):
     # Standardize the ID
-    chebi_id=str(chebi_id)  # Ensure it's a string
+    chebi_id = str(chebi_id)  # Ensure it's a string
     if not chebi_id.startswith("CHEBI:"):
         chebi_id = f"CHEBI:{chebi_id}"
     
     # Use the PARENTS endpoint to match the "Outgoing" section on the web
     url = f"https://www.ebi.ac.uk/chebi/backend/api/public/ontology/parents/{chebi_id}/"
+    
     try:
         response = requests.get(url, timeout=timeout)
         response.raise_for_status()
         parents = response.json()
     except Exception as e:
-        print(f"Request failed: {e}")
+        print(f"Request failed for {chebi_id}: {e}")
+    
+        return pd.DataFrame()
 
-    data=pd.DataFrame(parents["ontology_relations"])
+
+    if not parents or "ontology_relations" not in parents:
+        return pd.DataFrame()
+
+
+    data = pd.DataFrame(parents["ontology_relations"])
+    
+
+    if data.empty:
+        return data
+
     data = pd.json_normalize(data.to_dict(orient='records')) 
 
-    if relation_type:
+
+    if relation_type and 'outgoing_relations.relation_type' in data.columns:
         data = data[data['outgoing_relations.relation_type'] == relation_type]
-    return data       
+        
+    return data
 
 
 
